@@ -1,67 +1,73 @@
 import { db } from "../database/database.connection.js";
 
 
-export async function postRentals(req, res){
-    
-    const {customerId, gameId, daysRented} = req.body;
+export async function postRentals(req, res) {
 
-    if (!Number.isInteger(daysRented) || daysRented <= 0) {
-      return res.sendStatus(400)
+  const { customerId, gameId, daysRented } = req.body;
+
+  if (!Number.isInteger(daysRented) || daysRented <= 0) {
+    return res.sendStatus(400);
+  }
+
+  try {
+    const customerDate = await db.query(
+      "SELECT * FROM customers WHERE id = $1",
+      [customerId]
+    );
+    if (customerDate.rowCount === 0) {
+      return res.sendStatus(400);
     }
 
-    try{   
-      const customer = await db.query(`SELECT * FROM customers WHERE id = $1`, 
-      [customerId])
-      if(customer.rowCount === 0){
-        return res.sendStatus(400);
-      };
-
-      const game = await db.query(`"SELECT * FROM games WHERE id = $1"`, 
-      [gameId])
-      if(game.rowCount === 0){
-        return res.sendStatus(400);
-      };
-
-      const { stockTotal, pricePerDay } = game.rows[0];
-
-      const gameRental = await db.query(
-        'SELECT * FROM rentals WHERE "gameId" = $1 AND "returnDate" IS NULL',
-        [gameId])
-      if (gameRental.rowCount >= stockTotal) {
-        return res.sendStatus(400);
-      };
-
-      const rentDate = new Date().toISOString().slice(0, 10);
-      const originalPrice = pricePerDay * daysRented;
-
-      const rentalDate = [
-        customerId,
-        gameId,
-        rentDate,
-        daysRented,
-        null,
-        originalPrice,
-        null,
-      ];
-  
-      await db.query(`INSERT INTO rentals (
-          "customerId",
-          "gameId",
-          "rentDate",
-          "daysRented",
-          "returnDate",
-          "originalPrice",
-          "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        rentalDate
-      )
-
-      return res.sendStatus(201);
+    const gameDate = await db.query("SELECT * FROM games WHERE id = $1", [
+      gameId,
+    ]);
+    if (gameDate.rowCount === 0) {
+      return res.sendStatus(400);
     }
-    catch{
-      return res.status(500).send(err.message)
-    }  
-};
 
+    const { stockTotal, pricePerDay } = gameDate.rows[0];
+
+    const gameRentals = await db.query(
+      'SELECT * FROM rentals WHERE "gameId" = $1 AND "returnDate" IS NULL',
+      [gameId]
+    );
+    if (gameRentals.rowCount >= stockTotal) {
+      return res.status(400).send("All units already rented");
+    }
+
+    const rentDate = new Date().toISOString().slice(0, 10);
+    const originalPrice = pricePerDay * daysRented;
+
+    const rentalData = [
+      customerId,
+      gameId,
+      rentDate,
+      daysRented,
+      null,
+      originalPrice,
+      null,
+    ];
+
+    await db.query(
+      `
+      INSERT INTO rentals (
+        "customerId",
+        "gameId",
+        "rentDate",
+        "daysRented",
+        "returnDate",
+        "originalPrice",
+        "delayFee"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `,
+      rentalData
+    );
+
+    return res.sendStatus(201);
+  } catch (err) {
+    return res.status(500).send({ message: err });
+  }
+}
 
 
 export async function postEndRentals(req, res){
@@ -98,7 +104,7 @@ export async function postEndRentals(req, res){
 
     await db.query(`UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3`,
       [returnDate.toISOString().slice(0, 10), delayFee, id]
-    );
+    )
 
     return res.sendStatus(200) 
   }
