@@ -5,8 +5,11 @@ export async function postRentals(req, res){
     
     const {customerId, gameId, daysRented} = req.body;
 
-    try{
-      
+    if (!Number.isInteger(daysRented) || daysRented <= 0) {
+      return res.sendStatus(400);
+    }
+
+    try{   
       const customer = await db.query(`SELECT * FROM customers WHERE id = $1`, 
       [customerId])
       if(customer.rowCount === 0){
@@ -28,13 +31,13 @@ export async function postRentals(req, res){
         return res.sendStatus(400);
       };
 
-      const renDate = new Date().toISOString().slice(0, 10);
+      const rentDate = new Date().toISOString().slice(0, 10);
       const originalPrice = pricePerDay * daysRented;
 
       const rentalDate = [
         customerId,
         gameId,
-        renDate,
+        rentDate,
         daysRented,
         null,
         originalPrice,
@@ -46,7 +49,7 @@ export async function postRentals(req, res){
         INSERT INTO rentals (
           "customerId",
           "gameId",
-          "renDate",
+          "rentDate",
           "daysRented",
           "returnDate",
           "originalPrice",
@@ -111,8 +114,8 @@ export async function postEndRentals(req, res){
 
 export async function getRentals(req, res){
   
-  try {const rentals = await db.query(`
-    SELECT rentals.*, TO_CHAR(rentals."rentDate", 'yyyy-mm-dd') AS "formattedRentDate",
+  try {
+    const getRental = await db.query(`SELECT rentals.*, TO_CHAR(rentals."rentDate", 'yyyy-mm-dd') AS "formattedRentDate",
       customers.name AS "customerName",
       games.name AS "gameName"
     FROM rentals
@@ -120,7 +123,7 @@ export async function getRentals(req, res){
     JOIN games ON games.id = rentals."gameId"
   `);
 
-  const getList = rentals.rows.map((rental) => ({
+  const getList = getRental.rows.map((rental) => ({
     id: rental.id,
     customerId: rental.customerId,
     gameId: rental.gameId,
