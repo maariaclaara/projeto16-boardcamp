@@ -5,7 +5,7 @@ import { postGames, getGames } from "../controllers/games.controllers.js";
 
 const gamesRouter = Router();
 
-gamesRouter.post("/games", postGames);
-gamesRouter.get("/games", validateSchema(gameSchema), getGames);
+gamesRouter.post("/games", validateSchema(gameSchema), postGames);
+gamesRouter.get("/games", getGames);
 
 export default gamesRouter;
