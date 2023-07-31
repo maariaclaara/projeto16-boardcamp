@@ -28,6 +28,27 @@ export async function postCustomers(req, res) {
 };
 
 
+export async function getIdCustomers(req, res) {
+
+  const { id } = req.params;
+
+  try {
+    const idCustomer = await db.query("SELECT id, name, phone, cpf, TO_CHAR(birthday::DATE, 'yyyy-mm-dd') AS birthday FROM customers WHERE id = $1", [
+      id,
+    ]);
+
+    if (idCustomer.rowCount === 0) {
+      return res.status(404).send(res.message);
+    }
+
+    return res.status(200).send(idCustomer.rows[0]);
+  } 
+  catch (err) {
+    return res.status(500).send(err.message)
+  }
+} 
+
+
 export async function getCustomers(req, res){
 
   try {
@@ -41,26 +62,6 @@ export async function getCustomers(req, res){
     };
 } ;
 
-
-export async function getIdCustomers(req, res) {
-
-const { id } = req.params;
-
-try {
-  const customers = await db.query(`
-  SELECT id, name, phone, cpf, TO_CHAR(birthday::DATE, 'yyyy-mm-dd') AS birthday FROM customers WHERE id = $1`, 
-  [id]);
-
-  if (customers.rowCount === 0){
-    return res.status(404).send(err.message)
-  }
-
-  return res.status(200).send(result.rows[0]);
-} 
-catch (err) {
-  return res.status(500).send(err.message)
-};
-} 
 
 
 export async function putCustomers(req, res) {

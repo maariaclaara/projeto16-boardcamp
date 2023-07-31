@@ -59,7 +59,7 @@ export async function postRentals(req, res){
         rentalDate
       )
 
-      return res.sendStatus(201);
+      return res.status(201).send(res.message);
     }
     catch{
       return res.status(500).send(err.message)
@@ -104,8 +104,8 @@ export async function postEndRentals(req, res){
       [returnDate.toISOString().slice(0, 10), delayFee, id]
     );
 
-    return res.sendStatus(200); 
-  } 
+    return res.sendStatus(200) 
+  }
   catch{
     return res.status(500).send(err.message)
   }  
