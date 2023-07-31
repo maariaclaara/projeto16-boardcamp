@@ -6,7 +6,7 @@ export async function postRentals(req, res){
     const {customerId, gameId, daysRented} = req.body;
 
     if (!Number.isInteger(daysRented) || daysRented <= 0) {
-      return res.sendStatus(400);
+      return res.sendStatus(400)
     }
 
     try{   
@@ -44,22 +44,18 @@ export async function postRentals(req, res){
         null,
       ];
   
-      await db.query(
-        `
-        INSERT INTO rentals (
+      await db.query(`INSERT INTO rentals (
           "customerId",
           "gameId",
           "rentDate",
           "daysRented",
           "returnDate",
           "originalPrice",
-          "delayFee"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `,
+          "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         rentalDate
       )
 
-      return res.status(201).send(res.message);
+      return res.sendStatus(201);
     }
     catch{
       return res.status(500).send(err.message)
